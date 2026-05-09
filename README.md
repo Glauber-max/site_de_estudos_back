@@ -1,2 +1,2 @@
-# resumidor-de-v-deos-e-slides
-um script que resume videos ao receber a url, e slides ao receber o arquivo do slide
+# site de estudos
+é o back end do site, a proposta é ser um site de estudos com algumas features importantes para produtividade, um projeto pessoal e academico
