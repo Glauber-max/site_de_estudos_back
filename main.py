@@ -1,14 +1,14 @@
 from app.database.conecction import Base, db
 from app.models.agenda import Agenda
-from app.models.resumo import Resumo
-from app.models.questoes import Questao
-from app.models.usuario import Usuario
-from app.models.anotacoes import Anotacoes
+from app.models.summary import Summary
+from app.models.question import Question
+from app.models.user import User
+from app.models.notes import Notes
 
-def criar_table():
-    print("criando table")
+def create_table():
+    print("create table")
     Base.metadata.create_all(db)
-    print("table criado com sucesso")
+    print("table created successfully")
 
 if __name__ == "__main__":
-    criar_table()
+    create_table()
