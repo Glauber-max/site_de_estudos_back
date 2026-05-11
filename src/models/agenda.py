@@ -12,5 +12,5 @@ class Agenda(Base):
     titulo = Column("title", String(100), nullable=False)
     descricao = Column("description", Text, nullable=False)
     cor = Column("color", String(7), nullable=False)
-    concluido = Column("completed", Boolean, nullable=False)
+    concluido = Column("completed", Boolean, nullable=False, default=False)
     user = relationship("User", back_populates="agenda")
