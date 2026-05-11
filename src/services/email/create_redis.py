@@ -1,3 +1,4 @@
+
 import redis
 
 red = redis.Redis(host='localhost', port=6379, decode_responses=True)
@@ -7,7 +8,7 @@ def saved_redis(email_end: str, code: str):
         if red.ping():
             red.setex(email_end, 600, code)
     except Exception as e:
-        raise {"error": str(e)}
+        print(e)
 
 def compare_redis(email_end: str, code_writed: str):
     try:
@@ -18,4 +19,4 @@ def compare_redis(email_end: str, code_writed: str):
             else:
                 return False
     except Exception as e:
-        raise {"error": str(e)}
+        print(e)
