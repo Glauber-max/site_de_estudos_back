@@ -1,29 +1,38 @@
 from sqlalchemy.exc import IntegrityError
 from src.models import User
-from src.schemas import CreateUser
+from src.schemas import CreateUser, UserLogin
 from sqlalchemy.orm import Session
 from passlib.context import CryptContext
 from src.services.email.send_email import send_service
-
+from fastapi.exceptions import HTTPException
+pwd_context = CryptContext(schemes=["argon2"], deprecated="auto")
 #this function checks if the email is correct, creates the hash,
 # calls the function to send the email(services/emails/send_email) and store the hash in redis,
 # and finally saves it in the database
 #function of create Users
 def create_user_validation(register: CreateUser, db: Session):
     send = send_service()
-    pwd_context = CryptContext(schemes=["argon2"], deprecated="auto")
     password_hash = pwd_context.hash(register.senha)
-    if "@gmail.com" in register.email:
-        send.send_emails(email_end=register.email, nome=register.nome)
-        new = register.model_dump()
-        try:
-            new_user = User(
-                nome=new["nome"],
-                senha=password_hash,
-                email=new["email"]
-            )
-            db.add(new_user)
-            db.commit()
-            db.refresh(new_user)
-        except IntegrityError:
+    send.send_emails(email_end=register.email, nome=register.nome)
+    new = register.model_dump()
+    try:
+        new_user = User(
+            nome=new["nome"],
+            senha=password_hash,
+            email=new["email"]
+        )
+        db.add(new_user)
+        db.commit()
+        db.refresh(new_user)
+    except IntegrityError:
             db.rollback()
+
+#function of login users
+#note for me -> after add opcional verify in two steps
+def verify_login(user: UserLogin, db: Session):
+    result_user = db.query(User).filter(User.email == user.email).first()
+    if result_user is None:
+            raise HTTPException(status_code=400, detail="email or password incorrect")
+    if not pwd_context.verify(user.senha, str(result_user.senha)):
+            raise HTTPException(status_code=400, detail="email or password incorrect")
+    return {"message": "credentials correct, login successful"}

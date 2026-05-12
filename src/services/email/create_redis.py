@@ -12,10 +12,10 @@ def saved_redis(email_end: str, code: str):
         raise HTTPException(status_code=500, detail=str(e))
 
 #simple function for get the code and compare, if True, return True, else, return False
-def compare_redis(email_end: str, code_writed: str):
+def compare_redis(email_end: str, code_write: str):
     try:
             code_save = red.get(email_end)
-            if code_save == str(code_writed).strip():
+            if code_save == str(code_write).strip():
                 return True
             return False
     except Exception as e:
