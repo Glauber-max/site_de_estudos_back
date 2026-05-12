@@ -5,6 +5,9 @@ from sqlalchemy.orm import Session
 from passlib.context import CryptContext
 from src.services.email.send_email import send_service
 
+#this function checks if the email is correct, creates the hash,
+# calls the function to send the email(services/emails/send_email) and store the hash in redis,
+# and finally saves it in the database
 #function of create Users
 def create_user_validation(register: CreateUser, db: Session):
     send = send_service()

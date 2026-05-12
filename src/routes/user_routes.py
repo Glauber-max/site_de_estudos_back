@@ -13,7 +13,7 @@ from src.models import User
 #Create a variable router
 router = APIRouter()
 
-#router of create users and return users of /schemas
+#router of create users, it check if email exists, if no he use a function in controllers
 @router.post("/create_user")
 async def register_routes(register: sch.CreateUser, background_tasks: BackgroundTasks, db: Session = Depends(get_db),):
     db_users = db.query(User).filter(User.email == register.email).first()

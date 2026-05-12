@@ -1,7 +1,7 @@
 #now here I will write filters code
 from pydantic import BaseModel, ConfigDict
 
-
+#basic filter for create user
 class CreateUser(BaseModel):
     nome: str
     email: str

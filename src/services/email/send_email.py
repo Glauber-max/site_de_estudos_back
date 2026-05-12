@@ -13,6 +13,8 @@ class SendService(ABC):
     def send_emails(self, email_end: str, nome: str):
         pass
 
+#it method call function for create token, store in redis, and call the function for render template,
+# and finally send email
 class GmailSendService(SendService):
     def send_emails(self, email_end: str, nome: str):
         token = create_token()
