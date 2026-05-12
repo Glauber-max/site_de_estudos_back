@@ -1,14 +1,14 @@
-from app.database.conecction import Base, db
-from app.models.agenda import Agenda
-from app.models.summary import Summary
-from app.models.question import Question
-from app.models.user import User
-from app.models.notes import Notes
+from fastapi import FastAPI
 
-def create_table():
-    print("create table")
-    Base.metadata.create_all(db)
-    print("table created successfully")
+from src.models import create_table
+from src.routes.user_routes import router as user_routes
+app = FastAPI()
+
+app.include_router(user_routes, prefix="/user", tags=["user"])
+
+app.get("/")
+def home():
+    return {"message": "API rodando"}
 
 if __name__ == "__main__":
     create_table()
