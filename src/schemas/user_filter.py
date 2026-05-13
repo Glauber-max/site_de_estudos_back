@@ -16,3 +16,11 @@ class UserResponse(BaseModel):
 class UserLogin(BaseModel):
     email: EmailStr
     senha: str
+
+class ChangePassword(BaseModel):
+    nome: str
+    email: EmailStr
+
+class ChangePasswordValidation(BaseModel):
+    email: EmailStr
+    senha: str

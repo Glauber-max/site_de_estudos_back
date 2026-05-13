@@ -8,7 +8,6 @@ class User(Base):
     nome = Column("name", String(40), nullable=False)
     senha = Column("password", String(255), nullable=False)
     email = Column("email", String(100), nullable=False, index=True)
-    active = Column("active", Boolean, nullable=False, default=False)
     notes = relationship("Notes", back_populates="user")
     agenda = relationship( "Agenda", back_populates="user")
     summary = relationship("Summary", back_populates="user")
