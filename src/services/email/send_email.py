@@ -11,14 +11,13 @@ resend.api_key = os.getenv("RESEND.API_KEY")
 
 class SendService(ABC):
     @abstractmethod
-    def send_emails(self, email_end: str, nome: str):
+    def send_emails(self, email_end: str, nome: str, token: str):
         pass
 
 #it method call function for create token, store in redis, and call the function for render template,
 # and finally send email
 class GmailSendServiceCreateAccount(SendService):
-    def send_emails(self, email_end: str, nome: str):
-        token = create_token()
+    def send_emails(self, email_end: str, nome: str, token: str):
         saved_redis(nome=nome, code=token)
         html = create_html(name=nome, code=token, emails=email_end)
         try:
@@ -33,9 +32,8 @@ class GmailSendServiceCreateAccount(SendService):
             print(e)
 
 class GmailSendChangedPasswordService(SendService):
-    def send_emails(self, email_end: EmailStr, nome: str):
-        token = create_token()
-        saved_redis(email_end=email_end, code=token)
+    def send_emails(self, email_end: EmailStr, nome: str, token: str):
+        saved_redis(key=email_end, code=token)
         html = create_html_changed_password(name=nome, code=token)
         try:
             resend.Emails.send({

@@ -18,9 +18,9 @@ class UserLogin(BaseModel):
     senha: str
 
 class ChangePassword(BaseModel):
-    nome: str
     email: EmailStr
 
 class ChangePasswordValidation(BaseModel):
     email: EmailStr
+    token: str
     senha: str
