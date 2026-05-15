@@ -18,7 +18,7 @@ class SendService(ABC):
 # and finally send email
 class GmailSendServiceCreateAccount(SendService):
     def send_emails(self, email_end: str, nome: str, token: str):
-        saved_redis(nome=nome, code=token)
+        saved_redis(key=nome, code=token)
         html = create_html(name=nome, code=token, emails=email_end)
         try:
             resend.Emails.send({
