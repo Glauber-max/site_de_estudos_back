@@ -7,7 +7,7 @@ from src.models import User
 from src.schemas.user_filter import CreateUser, UserLogin, ChangePassword
 from sqlalchemy.orm import Session
 from passlib.context import CryptContext
-from src.services.email.factory_method_ import FactoryMessage
+from services.factory.factory_method_ import FactoryMessage
 from fastapi.exceptions import HTTPException
 pwd_context = CryptContext(schemes=["argon2"], deprecated="auto")
 #this function checks if the email is correct, creates the hash,

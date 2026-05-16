@@ -4,7 +4,6 @@ from dotenv import load_dotenv
 from abc import ABC, abstractmethod
 from pydantic import EmailStr
 from src.services.email.html_gerator_ import create_html, create_html_changed_password
-from src.services.email.code_gerator import create_token
 from src.services.email.create_redis import saved_redis
 load_dotenv()
 resend.api_key = os.getenv("RESEND.API_KEY")
