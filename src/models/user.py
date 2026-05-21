@@ -13,3 +13,4 @@ class User(Base):
     agenda = relationship( "Agenda", back_populates="user")
     summary = relationship("Summary", back_populates="user")
     question = relationship("Question", back_populates="user")
+    token_validation = relationship("TokenValidation", back_populates="user")

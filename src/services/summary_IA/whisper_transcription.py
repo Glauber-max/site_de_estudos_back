@@ -9,7 +9,8 @@ class Transcription(ABC):
 class WhisperTranscription(Transcription):
     def __init__(self):
         self.model = WhisperModel("base", device="cpu", compute_type="int8")
-    def transcribe(self, file_path: str):
+
+    def transcribe(self, file_path: str) -> str:
         if not os.path.exists(file_path):
             raise FileNotFoundError("path invalid or not found")
         segments, info = self.model.transcribe(file_path, beam_size=5)

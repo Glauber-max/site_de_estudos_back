@@ -8,5 +8,7 @@ python-dotenv<=1.2.2
 jinja2<=3.1.6
 redis<=7.4.0
 argon2-cffi<=25.1.0 #pip install redis argon2-cffi
-pytubefix
+pytubefix<=10.7.2
 faster-whisper
+google-genai<=2.4.0
+pyjwt[crypto]

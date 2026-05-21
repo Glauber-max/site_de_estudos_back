@@ -5,7 +5,7 @@ from sqlalchemy import Column, Integer, String, ForeignKey, DATETIME, Boolean, T
 #so i only define the tables using relationship for better experience in consult, and Base for create tables with python code
 class Agenda(Base):
     __tablename__ = 'agenda'
-    id = Column(Integer, primary_key=True, autoincrement=True, nullable=False)
+    id = Column(Integer, primary_key=True, autoincrement=True, nullable=False, index=True)
     id_usuario = Column(Integer, ForeignKey("user.id"), nullable=False)
     data_inicio = Column("start", DATETIME, nullable=False)
     data_final = Column("end", DATETIME, nullable=False)

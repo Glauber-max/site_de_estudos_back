@@ -4,6 +4,7 @@ from src.models.summary import Summary
 from src.models.question import Question
 from src.models.user import User
 from src.models.notes import Notes
+from src.models.token_user import TokenValidation
 from src.database.conecction import db, Base
 
 #function created for make a database

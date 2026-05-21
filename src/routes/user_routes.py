@@ -8,13 +8,14 @@ from fastapi import APIRouter, Depends, BackgroundTasks, HTTPException
 from src.database.conecction import  get_db
 from sqlalchemy.orm import Session
 from src.models import User
+from src.schemas.user_filter import RefreshToken
 
 #Create a variable router
 router = APIRouter()
 
 #router of create users, it verifies if email exists, if no, this function calls the others functions for store in redis the user
 @router.post("/create_user", status_code=201)
-async def register_routes(register: CreateUser, background_tasks: BackgroundTasks, db: Session = Depends(get_db),):
+async def register_routes(register: CreateUser, background_tasks: BackgroundTasks, db: Session = Depends(get_db)) -> dict[str, str]:
     db_users = db.query(User).filter(User.email == register.email).first()
     if db_users:
         raise HTTPException(status_code=400, detail="email already exists")
@@ -26,7 +27,7 @@ async def register_routes(register: CreateUser, background_tasks: BackgroundTask
 
 #router for get token and email, this router calls other functions for get create user request and valid this, after add in database
 @router.post("/validation_account", status_code=201)
-def router_for_validation_token(email: EmailStr, token: str, db: Session = Depends(get_db)):
+def router_for_validation_token(email: EmailStr, token: str, db: Session = Depends(get_db)) -> dict[str, str]:
     user = db.query(User).filter(User.email == email).first()
     if user:
         raise HTTPException(status_code=400, detail="email already exists")
@@ -35,16 +36,18 @@ def router_for_validation_token(email: EmailStr, token: str, db: Session = Depen
 
 #this router make a login in project, now this only verify the password hash and a password send for user
 @router.post("/login", status_code=200)
-def login(logins: UserLogin, db: Session = Depends(get_db)):
+def login(logins: UserLogin, db: Session = Depends(get_db)) -> dict[str, str]:
     try:
         result_login = user_controller.verify_login(user=logins, db=db)
-        return result_login
+        access_token = user_controller.create_jwt_acesses_token_user(result_login.id, db)
+        refresh_token =  user_controller.save_refresh_token_user(result_login, db)
+        return {"access": access_token, "refresh": refresh_token}
     except Exception as err:
         raise HTTPException(status_code=400, detail=str(err))
 
 #this router change a password, it calls others functions for send token
 @router.post("/change_passoword", status_code=200)
-async def change_password(user: ChangePassword, background_tasks: BackgroundTasks , db: Session = Depends(get_db)):
+async def change_password(user: ChangePassword, background_tasks: BackgroundTasks , db: Session = Depends(get_db)) -> dict[str, str]:
     background_tasks.add_task(
         user_controller.send_change_password_function, user=user, db=db
     )
@@ -52,9 +55,21 @@ async def change_password(user: ChangePassword, background_tasks: BackgroundTask
 
 #this router valid the token and accept other password
 @router.patch("/token/change_password", status_code=200)
-def verify_token_for_change_password(user: ChangePasswordValidation, db: Session = Depends(get_db)):
+def verify_token_for_change_password(user: ChangePasswordValidation, db: Session = Depends(get_db)) -> dict[str, str] | None:
+    verify_exists = db.query(User).filter(User.email==user.email).first()
+    if not verify_exists:
+        raise HTTPException(status_code=400, detail="make a sing-up")
     message = user_controller.verify_change_password(user=user, db=db)
     return message
+
+@router.post("/required/acesses_token", status_code=200)
+def requirements_token(refresh_token:  RefreshToken, db: Session = Depends(get_db)) -> dict[str, str]:
+    dados = user_controller.verify_refresh_token(refresh_token.refresh_token, db)
+    user = db.query(User).filter(User.id==dados["sub"]).first()
+    if not user or not isinstance(user, User):
+        raise HTTPException(status_code=400, detail="invalid refresh token")
+    token_new = user_controller.save_refresh_token_user(user, db)
+    return {"refreash token": token_new}
 
 
 

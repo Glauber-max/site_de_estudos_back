@@ -24,3 +24,6 @@ class ChangePasswordValidation(BaseModel):
     email: EmailStr
     token: str
     senha: str
+
+class RefreshToken(BaseModel):
+    refresh_token: str

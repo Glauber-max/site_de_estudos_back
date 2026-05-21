@@ -8,13 +8,13 @@ from src.schemas.user_filter import CreateUser
 red = redis.Redis(host='localhost', port=6379, decode_responses=True)
 
 #get a token, and email and also set in memory, after 600 seconds it is deleted
-def saved_redis(key: str, code: str):
+def saved_redis(key: str, code: str) -> None:
     try:
         red.setex(key, 300, code)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-def compare_redis_for_change_password(email: EmailStr, token: str):
+def compare_redis_for_change_password(email: EmailStr, token: str) -> bool:
     try:
         token_store = red.get(email)
         if token_store is None:
@@ -26,7 +26,7 @@ def compare_redis_for_change_password(email: EmailStr, token: str):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-def redis_create_user(user: CreateUser, token):
+def redis_create_user(user: CreateUser, token) -> None:
     try:
         dados = {
                 "name": user.nome,
@@ -46,5 +46,5 @@ def get_account_after_token_correct(email: EmailStr):
     json_result = json.loads(json_save)
     return json_result
 
-def delete_account_after_token(email: EmailStr) -> None:
+def delete_token_from_redis_after_token(email: EmailStr) -> None:
     red.delete(email)
