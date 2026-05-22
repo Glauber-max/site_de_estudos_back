@@ -1,3 +1,4 @@
+
 import os
 from abc import abstractmethod, ABC
 from src.schemas.summary_filter import SummaryCreate
@@ -34,13 +35,14 @@ class SummaryWthIA(ABC):
 class GeminiSummaryFlash(SummaryWthIA):
 
     def summarize(self, roteiro: str):
+        audio = self.cliente.files.upload(file=roteiro, config={"mime_type": "audio/mp3" })
         configs = types.GenerateContentConfig(
             response_mime_type="application/json",
             response_schema=SummaryCreate,
         )
         response  = self.cliente.models.generate_content(
             model="gemini-2.5-flash",
-            contents=[self.prompt, f"Aqui está o roteiro do vídeo para resumir:{roteiro}"],
+            contents=[self.prompt, audio],
             config=configs
         )
         return response.text
