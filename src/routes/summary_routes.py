@@ -1,5 +1,5 @@
-#this routes is only for summary
-from fastapi import APIRouter, Depends
+
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from src.database.conecction import get_db
 from src.controllers.summary_controller import CreateSummaryFromYoutube
@@ -13,35 +13,47 @@ import json
 security = HTTPBearer()
 router = APIRouter()
 
-@router.post("/summary_videos/download")
+@router.post("/summary_videos/download", status_code=201)
 def summary_videos(
         video: SchemaCreateSummaryFromYoutube,
         db: Session = Depends(get_db),
         credentials: HTTPAuthorizationCredentials = Depends(security)
-):
+) -> dict[str, str]:
     token_string = credentials.credentials.strip()
     user = verify_acesses_jwt(token_string)
 
     url_str = str(video.url)
-    ia = FactorySummary.factory_method("flash")
     pytube = CreateSummaryFromYoutube()
     path = pytube.get_audio_from_youtube(url_str)
     try:
+        ia = FactorySummary.factory_method("3.5")
         summary = ia.summarize(path)
-    except Exception:
-        ia = FactorySummary.factory_method("gemma")
-        text_archive = pytube.get_transcription_from_archive(path)
-        summary = ia.summarize(text_archive)
-    dados_json = json.loads(summary)
-    db_save = Summary(
-        content=dados_json["content"], #erro aq
-        subject=dados_json["subject"],
-        id_usuario=int(user["sub"])
-    )
-    db.add(db_save)
-    db.commit()
-    db.refresh(db_save)
-    return {"summary": dados_json}
+    except Exception as e:
+        print(f"Error first model: {e}")
+        try:
+            ia = FactorySummary.factory_method("2.5")
+            summary = ia.summarize(path)
+        except Exception as error:
+            print(f"Error last model: {error}")
+            raise HTTPException(status_code=503, detail="IA cant summarize this")
+    try:
+        dados_json = json.loads(summary)
+        db_save = Summary(
+            content=dados_json["content"],
+            subject=dados_json["subject"],
+            id_usuario=int(user["sub"])
+        )
+    except (json.JSONDecoder, KeyError) as error:
+        print(f"Error second model: {error}")
+        raise HTTPException(status_code=422, detail="the structure return summary falied ")
+    try:
+        db.add(db_save)
+        db.commit()
+        db.refresh(db_save)
+        return {"summary": dados_json}
+    except Exception as error:
+        print(f"Error in database store: {error}")
+        raise HTTPException(status_code=500, detail="error saving in database")
 
 
 

@@ -9,6 +9,6 @@ jinja2<=3.1.6
 redis<=7.4.0
 argon2-cffi<=25.1.0 #pip install redis argon2-cffi
 pytubefix<=10.7.2
-faster-whisper
-google-genai<=2.4.0
-pyjwt[crypto]
+faster-whisper<=1.2.1
+google-genai<=2.6.0
+pyjwt[crypto]<=2.13.0

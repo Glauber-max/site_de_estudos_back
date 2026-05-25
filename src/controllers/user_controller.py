@@ -1,6 +1,6 @@
 
 from pydantic import EmailStr
-from sqlalchemy import Update
+from sqlalchemy import update
 from src.models.token_user import TokenValidation
 from src.schemas.user_filter import ChangePasswordValidation
 from src.services.email.create_redis import redis_create_user, get_account_after_token_correct, compare_redis_for_change_password, delete_token_from_redis_after_token
@@ -18,25 +18,23 @@ import os
 pwd_context = CryptContext(schemes=["argon2"], deprecated="auto")
 load_dotenv()
 key = os.getenv("SECRET_KEY")
-#this function checks if the email is correct, creates the hash,
-# calls the function to send the email(services/emails/send_email) and store the hash in redis,
-# and finally saves it in the database
-#function of create Users
+
 def user_create_redis(register: CreateUser) -> None:
     try:
         create = FactoryMessage.factory_method("create_account")
         token = create_token()
         redis_create_user(register, token)
         create.send_emails(register.email, register.nome, token)
-    except Exception:
-        raise HTTPException(status_code=500, detail="email get off on air")
+    except Exception as e:
+        print(f"error register in redis/send email: {e}")
+        raise HTTPException(status_code=500, detail="Failed to process registration")
 
 
 def function_for_get_user(email: EmailStr, db: Session, token_send: str) -> None:
     try:
         json_user = get_account_after_token_correct(email)
         if json_user["token"] != token_send:
-            raise HTTPException(status_code=400, detail="token incorrect")
+            raise HTTPException(status_code=401, detail="token incorrect or expired")
         pwd_hash = pwd_context.hash(json_user["password"])
         save_user = User(
             name=json_user["name"],
@@ -47,18 +45,20 @@ def function_for_get_user(email: EmailStr, db: Session, token_send: str) -> None
         db.commit()
         db.refresh(save_user)
         delete_token_from_redis_after_token(email)
-    except Exception:
-        raise HTTPException(status_code=500, detail="server error")
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"error register in database: {e}")
+        raise HTTPException(status_code=500, detail="server error in database")
 
 
-#function of login users
-#note for me -> after add opcional verify in two steps
+
 def verify_login(user: UserLogin, db: Session) -> User:
     result_user = db.query(User).filter(User.email == user.email).first()
     if result_user is None or not isinstance(result_user, User):
-            raise HTTPException(status_code=400, detail="email or password incorrect")
+            raise HTTPException(status_code=401, detail="email or password incorrect")
     if not pwd_context.verify(user.senha, str(result_user.password)):
-        raise HTTPException(status_code=400, detail="email or password incorrect")
+        raise HTTPException(status_code=401, detail="email or password incorrect")
     return result_user
 
 
@@ -69,31 +69,36 @@ def send_change_password_function(user: ChangePassword, db: Session) -> None:
         change = FactoryMessage.factory_method("change_password")
         user_verify = db.query(User).filter(User.email == user.email).first()
         if user_verify is None:
-            raise HTTPException(status_code=400, detail="email or password incorrect" )
+            return #I search about security and return nothing is a better choice this case
         username = str(user_verify.name)
         change.send_emails(email_end=user.email, nome=username, token=token)
-    except Exception:
-        raise HTTPException(status_code=500, detail="internal server erro")
+    except Exception as e:
+        print(f"error sending change_password function: {e}")
+        raise HTTPException(status_code=500, detail="internal server error create password reset")
 
 
 def verify_change_password(user: ChangePasswordValidation, db: Session) -> dict[str, str] | None:
     try:
         user_verify = compare_redis_for_change_password(email=user.email, token=user.token)
+        if not user_verify:
+            raise HTTPException(status_code=401, detail="email or password incorrect")
         pwd_hash = pwd_context.hash(user.senha)
-        if user_verify:
-            change = Update(User).where(User.email == user.email).values(password=pwd_hash)
-            db.execute(change)
-            db.commit()
-            delete_token_from_redis_after_token(user.email)
-            return {"message": "perfect, password changed"}
+        change = update(User).where(User.email == user.email).values(password=pwd_hash)
+        db.execute(change)
+        db.commit()
+        delete_token_from_redis_after_token(user.email)
+        return {"message": "perfect, password changed"}
+    except HTTPException:
+        raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        print(f"error update to password: {e}")
+        raise HTTPException(status_code=500, detail="data base error update")
 
 
 def create_jwt_acesses_token_user(id_user: int, db: Session) -> str:
     user = db.query(User).filter(User.id == id_user).first()
     if user is None:
-        raise HTTPException(status_code=404, detail="server error NF")
+        raise HTTPException(status_code=404, detail="user not found dor token geration")
     payload = {
             "sub": str(user.id),
             "name":user.name,
@@ -102,13 +107,12 @@ def create_jwt_acesses_token_user(id_user: int, db: Session) -> str:
             "type": "access",
             "role": "user"
         }
-    token = jwt.encode(payload, key, algorithm="HS256")
-    return token
+    return jwt.encode(payload, key, algorithm="HS256")
 
 def create_jwt_refresh_token_user(id_user: int, db: Session) -> dict:
     user = db.query(User).filter(User.id == id_user).first()
     if user is None:
-        raise HTTPException(status_code=404, detail="server error NF")
+        raise HTTPException(status_code=404, detail="user not found for refreash token generation")
     payload = {
         "sub": str(user.id),
         "type": "refresh_token",
@@ -132,23 +136,25 @@ def save_refresh_token_user(user: User, db: Session) -> str:
         db.refresh(refresh)
         return token["token"]
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        print(f"server error save refresh token: {e}")
+        raise HTTPException(status_code=500, detail="error securing session tokens")
 
 def verify_acesses_jwt(token: str) -> dict[str, str] | None:
     try:
-        dados = jwt.decode(token, key, algorithms=["HS256"])
-        return dados
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        return jwt.decode(token, key, algorithms=["HS256"])
+    except jwt.ExpiredSignatureError:
+        raise HTTPException(status_code=401, detail=" access token expired")
+    except jwt.InvalidTokenError:
+        raise HTTPException(status_code=401, detail="invalid token")
 
 def verify_refresh_token(token: str, db: Session) -> dict[str, str]:
     try:
         dados = jwt.decode(token, key, algorithms=["HS256"])
         refresh = db.query(TokenValidation).filter(TokenValidation.id_usuario == dados["sub"]).first()
         if refresh is None or not isinstance(refresh, TokenValidation):
-            raise HTTPException(status_code=500, detail="server error NF")
+            raise HTTPException(status_code=404, detail="refresh token registry not found")
         if not refresh.is_revoked:
-            raise HTTPException(status_code=401, detail="token blocked", headers={"WWW-Authenticate": "Bearer"})
+            raise HTTPException(status_code=401, detail="token blocked or revoked", headers={"WWW-Authenticate": "Bearer"})
         return dados
     except jwt.ExpiredSignatureError:
         raise HTTPException(status_code=401, detail="token expired")

@@ -1,5 +1,5 @@
 from src.services.summary_IA.whisper_transcription import WhisperTranscription
-from src.services.summary_IA.gemini_summary import GeminiSummaryFlash, GeminiSummaryGemma
+from src.services.summary_IA.gemini_summary import GeminiSummarythreeDotFive, GeminiSummaryTwoDotFive
 class FactoryTranscription:
     _types_of_transcriptions = {
         "whisper": WhisperTranscription(),
@@ -9,8 +9,8 @@ class FactoryTranscription:
 
 class FactorySummary:
     _types_of_summary = {
-        "flash": GeminiSummaryFlash(),
-        "gemma": GeminiSummaryGemma(),
+        "3.5": GeminiSummarythreeDotFive(),
+        "2.5": GeminiSummaryTwoDotFive(),
 
     }
     @classmethod

@@ -2,7 +2,7 @@
 import os
 from abc import abstractmethod, ABC
 from src.schemas.summary_filter import SummaryCreate
-from google import genai
+from    google import genai
 from google.genai import types
 from dotenv import load_dotenv
 load_dotenv()
@@ -32,7 +32,7 @@ class SummaryWthIA(ABC):
     def summarize(self, roteiro: str):
         pass
 
-class GeminiSummaryFlash(SummaryWthIA):
+class GeminiSummarythreeDotFive(SummaryWthIA):
 
     def summarize(self, roteiro: str):
         audio = self.cliente.files.upload(file=roteiro, config={"mime_type": "audio/mp3" })
@@ -41,21 +41,22 @@ class GeminiSummaryFlash(SummaryWthIA):
             response_schema=SummaryCreate,
         )
         response  = self.cliente.models.generate_content(
-            model="gemini-2.5-flash",
+            model="gemini-3.5-flash",
             contents=[self.prompt, audio],
             config=configs
         )
         return response.text
 
-class GeminiSummaryGemma(SummaryWthIA):
+class GeminiSummaryTwoDotFive(SummaryWthIA):
     def summarize(self, roteiro: str):
+        audio = self.cliente.files.upload(file=roteiro, config={"mime_type": "audio/mp3"})
         configs = types.GenerateContentConfig(
             response_mime_type="application/json",
             response_schema=SummaryCreate,
         )
         response = self.cliente.models.generate_content(
-            model="gemma4-31b",
-            contents=[self.prompt, f"Aqui está o roteiro do vídeo para resumir:{roteiro}"],
+            model="gemini-2.5-flash",
+            contents=[self.prompt, audio],
             config=configs
         )
         return response.text

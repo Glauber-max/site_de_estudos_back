@@ -18,7 +18,7 @@ class CreateSummaryFromYoutube(CreateSummary):
     def get_audio_from_youtube(self, url: str) -> str:
         id_aleatorio = str(uuid.uuid7())
         yt = YouTube(url, on_progress_callback=on_progress)
-        yt_audio = yt.streams.get_audio_only(subtype='mp4')
+        yt_audio = yt.streams.get_audio_only(subtype='mp3')
         if yt_audio is None:
             raise Exception('No audio found')
         yt_audio.download(output_path="downloads_audio", filename= id_aleatorio)

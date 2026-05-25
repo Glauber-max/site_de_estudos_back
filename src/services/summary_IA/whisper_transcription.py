@@ -8,7 +8,7 @@ class Transcription(ABC):
 
 class WhisperTranscription(Transcription):
     def __init__(self):
-        self.model = WhisperModel("base", device="cpu", compute_type="int8")
+        self.model = WhisperModel("base", device="cpu", compute_type="int8", cpu_threads=4)
 
     def transcribe(self, file_path: str) -> str:
         if not os.path.exists(file_path):
