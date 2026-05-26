@@ -45,7 +45,7 @@ def summary_videos(
         )
     except (json.JSONDecoder, KeyError) as error:
         print(f"Error second model: {error}")
-        raise HTTPException(status_code=422, detail="the structure return summary falied ")
+        raise HTTPException(status_code=422, detail="the structure return summary failed ")
     try:
         db.add(db_save)
         db.commit()
@@ -54,6 +54,18 @@ def summary_videos(
     except Exception as error:
         print(f"Error in database store: {error}")
         raise HTTPException(status_code=500, detail="error saving in database")
+
+@router.get(f"/summary_videos/filter", status_code=200)
+def see_summary(subject: str = None, db: Session = Depends(get_db), credentials: HTTPAuthorizationCredentials = Depends(security)):
+    jwt = credentials.credentials.strip()
+    user = verify_acesses_jwt(jwt)
+    summary = db.query(Summary).filter(Summary.id_usuario == user["sub"]).all()
+    if not summary or isinstance(summary, Summary):
+        raise HTTPException(status_code=404, detail="Summary not found")
+    if subject:
+        summary_list = [l.subject for l in summary if subject.lower() in l.subject.lower()]
+        return {"summary": summary_list}
+    return {"summary": []}
 
 
 

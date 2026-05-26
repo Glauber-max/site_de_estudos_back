@@ -1,6 +1,6 @@
 from src.database.conecction import Base
 from sqlalchemy.orm import relationship
-from sqlalchemy import Column, Integer, String, Boolean
+from sqlalchemy import Column, Integer, String, DateTime
 
 class User(Base):
     __tablename__ = 'user'
@@ -8,9 +8,8 @@ class User(Base):
     name = Column("name", String(40), nullable=False)
     password = Column("password", String(255), nullable=False)
     email = Column("email", String(100), nullable=False, index=True)
-    soft_delete = Column("soft_delete", Boolean, nullable=False, default=False)
-    notes = relationship("Notes", back_populates="user")
-    agenda = relationship( "Agenda", back_populates="user")
-    summary = relationship("Summary", back_populates="user")
-    question = relationship("Question", back_populates="user")
-    token_validation = relationship("TokenValidation", back_populates="user")
+    notes = relationship("Notes", back_populates="user", cascade="all, delete-orphan")
+    agenda = relationship( "Agenda", back_populates="user", cascade="all, delete-orphan")
+    summary = relationship("Summary", back_populates="user", cascade="all, delete-orphan")
+    question = relationship("Question", back_populates="user", cascade="all, delete-orphan")
+    token_validation = relationship("TokenValidation", back_populates="user", cascade="all, delete-orphan")

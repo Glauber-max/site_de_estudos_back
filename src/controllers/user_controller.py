@@ -95,10 +95,7 @@ def verify_change_password(user: ChangePasswordValidation, db: Session) -> dict[
         raise HTTPException(status_code=500, detail="data base error update")
 
 
-def create_jwt_acesses_token_user(id_user: int, db: Session) -> str:
-    user = db.query(User).filter(User.id == id_user).first()
-    if user is None:
-        raise HTTPException(status_code=404, detail="user not found dor token geration")
+def create_jwt_acesses_token_user(user: User) -> str:
     payload = {
             "sub": str(user.id),
             "name":user.name,
@@ -107,14 +104,12 @@ def create_jwt_acesses_token_user(id_user: int, db: Session) -> str:
             "type": "access",
             "role": "user"
         }
-    return jwt.encode(payload, key, algorithm="HS256")
+    dados = jwt.encode(payload, key, algorithm="HS256")
+    return dados
 
-def create_jwt_refresh_token_user(id_user: int, db: Session) -> dict:
-    user = db.query(User).filter(User.id == id_user).first()
-    if user is None:
-        raise HTTPException(status_code=404, detail="user not found for refreash token generation")
+def create_jwt_refresh_token_user(id_user: int) -> dict:
     payload = {
-        "sub": str(user.id),
+        "sub": str(id_user),
         "type": "refresh_token",
         "exp": datetime.now(timezone.utc) + timedelta(days=7),
         "iat": datetime.now(timezone.utc),
@@ -124,7 +119,7 @@ def create_jwt_refresh_token_user(id_user: int, db: Session) -> dict:
     return {"token": token, "dateexp":payload["exp"]}
 
 def save_refresh_token_user(user: User, db: Session) -> str:
-    token = create_jwt_refresh_token_user(user.id, db)
+    token = create_jwt_refresh_token_user(user.id)
     try:
         refresh = TokenValidation(
             id_usuario=user.id,
@@ -139,7 +134,7 @@ def save_refresh_token_user(user: User, db: Session) -> str:
         print(f"server error save refresh token: {e}")
         raise HTTPException(status_code=500, detail="error securing session tokens")
 
-def verify_acesses_jwt(token: str) -> dict[str, str] | None:
+def verify_acesses_jwt(token: str) -> dict[str, str]:
     try:
         return jwt.decode(token, key, algorithms=["HS256"])
     except jwt.ExpiredSignatureError:
@@ -153,7 +148,7 @@ def verify_refresh_token(token: str, db: Session) -> dict[str, str]:
         refresh = db.query(TokenValidation).filter(TokenValidation.id_usuario == dados["sub"]).first()
         if refresh is None or not isinstance(refresh, TokenValidation):
             raise HTTPException(status_code=404, detail="refresh token registry not found")
-        if not refresh.is_revoked:
+        if refresh.is_revoked and dados["type"] == "refresh_token":
             raise HTTPException(status_code=401, detail="token blocked or revoked", headers={"WWW-Authenticate": "Bearer"})
         return dados
     except jwt.ExpiredSignatureError:
