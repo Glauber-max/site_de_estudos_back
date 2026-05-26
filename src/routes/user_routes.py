@@ -114,3 +114,23 @@ def hard_delete(credentials: HTTPAuthorizationCredentials = Depends(security), d
     except Exception as e:
         print(f"account cant be deleted: {e}")
         raise HTTPException(status_code=500, detail="cant be deleted")
+
+@router.post("/logout", status_code=200)
+def logout(credentials: HTTPAuthorizationCredentials = Depends(security), db: Session = Depends(get_db)):
+    jwt = credentials.credentials.strip()
+    user = user_controller.verify_acesses_jwt(jwt)
+    refresh = db.query(TokenValidation).filter(TokenValidation.id_usuario == user["sub"]).first()
+    if not refresh:
+        raise HTTPException(status_code=404, detail="Session not found.")
+    db.delete(refresh)
+    db.commit()
+    return {"message": "user logged out"}
+
+@router.get("/obter/usuario", status_code=200)
+def get_user(credentials: HTTPAuthorizationCredentials = Depends(security), db: Session = Depends(get_db)):
+    jwt = credentials.credentials.strip()
+    user_jwt = user_controller.verify_acesses_jwt(jwt)
+    user = db.query(User).filter(User.id == user_jwt["sub"]).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="Account not found.")
+    return {"user": user}
