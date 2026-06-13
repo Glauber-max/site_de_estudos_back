@@ -1,4 +1,4 @@
-
+from fastapi.security import HTTPAuthorizationCredentials
 from pydantic import EmailStr
 from sqlalchemy import update
 from src.models.token_user import TokenValidation
@@ -134,9 +134,10 @@ def save_refresh_token_user(user: User, db: Session) -> str:
         print(f"server error save refresh token: {e}")
         raise HTTPException(status_code=500, detail="error securing session tokens")
 
-def verify_acesses_jwt(token: str) -> dict[str, str]:
+def verify_acesses_jwt(token: HTTPAuthorizationCredentials) -> dict[str, str]:
+    tokens = token.credentials.strip()
     try:
-        return jwt.decode(token, key, algorithms=["HS256"])
+        return jwt.decode(tokens, key, algorithms=["HS256"])
     except jwt.ExpiredSignatureError:
         raise HTTPException(status_code=401, detail=" access token expired")
     except jwt.InvalidTokenError:

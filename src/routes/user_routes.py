@@ -102,8 +102,7 @@ and allow reactivating or restoring the account.
 '''
 @router.delete("/delete/tables", status_code=200)
 def hard_delete(credentials: HTTPAuthorizationCredentials = Depends(security), db: Session = Depends(get_db)):
-    jwt = credentials.credentials.strip()
-    user = user_controller.verify_acesses_jwt(jwt)
+    user = user_controller.verify_acesses_jwt(credentials)
     user_for_delete = db.query(User).filter(User.id == user["sub"]).first()
     if user_for_delete is None:
         raise HTTPException(status_code=404, detail="Account not found.")
@@ -117,8 +116,7 @@ def hard_delete(credentials: HTTPAuthorizationCredentials = Depends(security), d
 
 @router.post("/logout", status_code=200)
 def logout(credentials: HTTPAuthorizationCredentials = Depends(security), db: Session = Depends(get_db)):
-    jwt = credentials.credentials.strip()
-    user = user_controller.verify_acesses_jwt(jwt)
+    user = user_controller.verify_acesses_jwt(credentials)
     refresh = db.query(TokenValidation).filter(TokenValidation.id_usuario == user["sub"]).first()
     if not refresh:
         raise HTTPException(status_code=404, detail="Session not found.")
@@ -128,8 +126,7 @@ def logout(credentials: HTTPAuthorizationCredentials = Depends(security), db: Se
 
 @router.get("/obter/usuario", status_code=200)
 def get_user(credentials: HTTPAuthorizationCredentials = Depends(security), db: Session = Depends(get_db)):
-    jwt = credentials.credentials.strip()
-    user_jwt = user_controller.verify_acesses_jwt(jwt)
+    user_jwt = user_controller.verify_acesses_jwt(credentials)
     user = db.query(User).filter(User.id == user_jwt["sub"]).first()
     if not user:
         raise HTTPException(status_code=404, detail="Account not found.")
