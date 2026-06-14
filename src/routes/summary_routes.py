@@ -51,6 +51,7 @@ def summary_videos(
         db.refresh(db_save)
         return dados_json
     except Exception as error:
+        db.rollback()
         print(f"Error in database store: {error}")
         raise HTTPException(status_code=500, detail="error saving in database")
 
@@ -88,5 +89,6 @@ def delete_summary(
         db.commit()
         return {"message": "summary deleted successfully"}
     except Exception as error:
+        db.rollback()
         print(f"Error in database delete: {error}")
         raise HTTPException(status_code=500, detail="error deleting summary")

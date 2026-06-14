@@ -23,6 +23,7 @@ def write_note(note: WriteNote, db: Session = Depends(get_db), credentials: HTTP
         db.refresh(note_write)
         return {"message": "Note successfully created"}
     except Exception as error:
+        db.rollback()
         print(f"Error in database store: {error}")
         raise HTTPException(status_code=500, detail="server are error in store")
 

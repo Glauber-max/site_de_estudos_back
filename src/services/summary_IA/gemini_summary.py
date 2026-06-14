@@ -2,7 +2,7 @@
 import os
 from abc import abstractmethod, ABC
 from src.schemas.summary_filter import SummaryCreate
-from    google import genai
+from  google import genai
 from google.genai import types
 from dotenv import load_dotenv
 load_dotenv()
@@ -13,21 +13,25 @@ api_key_genai = os.getenv("GEMINI_API_KEY")
 class SummaryWthIA(ABC):
     def __init__(self):
         self.cliente = genai.Client()
-        self.prompt = """Quero que você atue como um resumidor de vídeos de forma objetiva e eficiente. Sua tarefa é analisar o conteúdo do vídeo e produzir um resumo claro, curto e estruturado. O resumo deve conter
-        Explique rapidamente qual é o assunto principal do vídeo.  
-        Identifique a proposta ou objetivo do autor.
-        Liste os tópicos mais relevantes apresentados.  
-        Explique cada ponto de forma breve, sem se alongar.  
-        Se houver exemplos ou dados importantes, mencione de forma resumida.
-        Caso o vídeo seja educativo, descreva o que ele ensina em poucas frases.  
-        Resuma instruções ou lições de forma prática e direta.
-        Conclusão ou mensagem final
-        Mostre como o vídeo termina: conclusão, recomendação ou chamada para ação.  
-        Se houver resumo do próprio autor, inclua-o de forma condensada.
-        Seja fiel ao conteúdo, sem opiniões pessoais.  
-        Use frases curtas e objetivas.  
-        O resumo deve ser rápido de ler, mas suficiente para entender o vídeo sem precisar assisti-lo.
-        O resumo não deve ser extremamente longo: mantenha a objetividade, economize tempo e foque apenas nos pontos essenciais."""
+        self.prompt = """I want you to act as an objective and efficient video summarizer. Your task is to analyze the video's content and produce a clear, short, and structured summary. The summary must contain:
+
+- Quickly explain the main subject of the video.
+- Identify the author's proposal or objective.
+- List the most relevant topics presented.
+- Explain each point briefly, without dragging on.
+- If there are important examples or data, mention them briefly.
+- If the video is educational, describe what it teaches in a few sentences.
+- Summarize instructions or lessons in a practical and direct way.
+
+Conclusion or Final Message:
+- Show how the video ends: conclusion, recommendation, or call to action.
+- If there is a summary provided by the author, include it in a condensed form.
+
+Guidelines:
+- Be faithful to the content, without inserting personal opinions.
+- Use short and objective sentences.
+- The summary should be quick to read, but comprehensive enough to understand the video without needing to watch it.
+- The summary must not be extremely long: maintain objectivity, save time, and focus strictly on the essential points."""
     @abstractmethod
     def summarize(self, roteiro: str):
         pass

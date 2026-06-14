@@ -45,8 +45,9 @@ Ensure you have the following components installed on your environment:
 2. **Activate the MV:**
     ```bash
    python -m venv venv
-    # Ativação (Linux/macOS): source venv/bin/activate
-    # Ativação (Windows): .\venv\Scripts\Activate.ps1
+    #  (Linux/macOS): source venv/bin/activate
+    #  (Windows): .\venv\Scripts\Activate.ps1
+   if no access, write Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope Process, and after use a activation
 
 3. **install requirements:**
     ```bash
@@ -84,12 +85,63 @@ POST
 /user/required/acesses_token
 Requirements Token
 
-***summary***
+DELETE
+/user/delete/tables
+Hard Delete
+
+POST
+/user/logout
+Logout
+
+GET
+/user/obter/usuario
+Get User
+
+summary
 
 POST
 /summary/summary_videos/download
 Summary Videos
 
+
+GET
+/summary/summary_videos/filter
+See Summary
+
+GET
+/summary/summary_videos/see_all
+See All Summary
+
+DELETE
+/summary/summary_videos/delete/{id_summary}
+Delete Summary
+
+notes
+
+POST
+/notes/write
+Write Note
+
+GET
+/notes/get_note_all
+Get Notes
+
+GET
+/notes/get_note/filter
+Get Filter Notes
+
+DELETE
+/notes/delete_note/{note_id}
+Delete Note
+
+PATCH
+/notes/update_note/{note_id}
+Update Notes
+
+default
+GET
+/
+Home
 * Refresh Token Leak Fix: Adjust the login controller logic to prevent generating/stacking infinite Refresh Tokens for the same active user inside the database.
 
 * Fallback Optimization: Migrate the standard local Whisper processing over to fast-whisper (bringing fallback execution times down from 10 minutes to under 2 minutes).
