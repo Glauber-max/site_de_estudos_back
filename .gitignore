@@ -3,3 +3,9 @@
 databaseEstudos.sqlite
 #ocult variable from ambients
 .env
+.idea
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
