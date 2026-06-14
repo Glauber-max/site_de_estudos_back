@@ -1,7 +1,4 @@
 import json
-from turtledemo.penrose import star
-
-from soupsieve.util import lower
 from sqlalchemy import update
 from fastapi import Depends, HTTPException, APIRouter
 from sqlalchemy.orm import Session

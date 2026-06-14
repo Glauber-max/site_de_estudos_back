@@ -62,7 +62,7 @@ def see_summary(subject: str = None, db: Session = Depends(get_db), credentials:
     if subject:
         summary_list = db.query(Summary).filter(
             Summary.id_usuario == int(user["sub"]),
-            Summary.subject.like(f"%{subject}%")
+            Summary.subject.ilike(f"%{subject}%")
         ).all()
         return {"summary": summary_list}
     return {"summary": []}

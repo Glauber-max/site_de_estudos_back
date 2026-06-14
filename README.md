@@ -1,151 +1,177 @@
-#  AI Video Summarizer & Auth Hub
-this project is a RESTful API built with FastAPI that automates the process of generating detailed summaries from YouTube videos using multimodal Artificial Intelligence (Gemini 2.5 Flash). Additionally, the application features a complete, secure authentication and user management ecosystem utilizing JWT, Redis for session/staging caching, and SQLITE or other database for persistent data.
+---
 
-##  Technologies & Infrastructure
+# Study Hub API (AI-Powered)
 
-* **Python 3.11+**
-* **FastAPI** (High-performance Web Framework)
-* **SQLITE** (Relational Database for users and summaries storage)
-* **Redis** (In-memory database for temporary staging cache and session tokens)
-* **Google GenAI SDK** (Native integration with Gemini 2.5 Flash and Gemma)
-* **Pytube** (YouTube audio extraction and download)
-* **PyJWT / Passlib** (Secure JWT generation and password hashing with bcrypt)
-* **SMTP / Email Service** (Password recovery token delivery system)
-
-## Advanced System Flows
-
-### 1. User Registration & Activation (Staging Pattern)
-To prevent "ghost" or unverified users from bloating the primary database, the initial signup process hashes the password and stores the temporary user object inside **Redis**. An activation token is sent via email; once successfully verified, the user data is fetched from Redis and permanently persisted into **SQLITE**.
-
-### 2. Primary AI Pipeline (Gemini 2.5 Flash)
-The audio stream is extracted from the YouTube video and uploaded directly to Google's Files API. Gemini 2.5 Flash processes the native audio file directly in approximately 30 seconds, returning a highly accurate, structured summary mapped straight into a Pydantic Validation Schema.
-
-### 3. Resilient AI Fallback (Gemma + Whisper)
-If the Gemini API encounters rate limits or downtime, the system automatically triggers a local fallback pipeline. A local Whisper instance transcribes the audio into a long text block, which is then fed into the Gemma LLM to compile the structured summary.
+**Product Vision:**
+Develop an "Intelligent Study Hub" that leverages generative AI to transform multimedia content into educational material, reducing students' preparation time and centralizing their personal organization tools within a secure, high-performance ecosystem.
 
 ---
 
-##  Prerequisites
+## Core Features (MVP Backlog)
 
-Ensure you have the following components installed on your environment:
-* **Python 3.11+**
-* A running **Redis Server** (`docker run -d -p 6379:6379 redis`)
-* A Google AI Studio **Gemini API Key**
-* A Resend (for send email) API key
+* **User Module (Auth):**
+* Registration with email verification using Redis as a temporary cache (Staging Pattern).
+* Bulletproof authentication system with JWT (Access and Refresh Tokens).
+* Password recovery via temporary tokens sent by email.
+
+
+* **Summary Module (AI):**
+* Transcription and structured summarization focused on objectivity using Gemini models (3.5/2.5 Flash).
+
+
+* **Questions Module (AI):**
+* Automatic generation of objective questions (multiple choice A-E) based on summaries.
+* Detailed resolutions explaining the correct answer and the necessary fundamentals.
+* Full CRUD (Create, Read, Update, Delete) for question management.
+
+
+* **Organization Module (Productivity):**
+* Full CRUD for Notes to jot down summaries or general content.
+
+
+
+---
+
+##  Crucial Business Rules & Architecture
+
+* **AI Fallback:** If the primary AI model (Gemini 3.5) fails or hits its token limit, the system uses a *Factory* pattern to automatically attempt processing via the 2.5 model before returning an error.
+* **Cache Security:** Account validation and password reset tokens have a strict TTL (Time-To-Live) of 300 seconds (5 minutes) in Redis.
+* **Data Isolation (Tenant-like):** No data (note, question, summary) can be accessed, modified, or deleted unless it strictly belongs to the `sub` (ID) contained in the authenticated user's JWT.
+
+---
+
+##  Technologies & Infrastructure
+
+* **Framework:** FastAPI
+* **Database:** SQLite (ORM: SQLAlchemy)
+* **AI/Multimodal:** Google GenAI SDK (Gemini 2.5/3.5 Flash)
+* **Audio:** `faster-whisper` (Optimized local processing)
+* **Cache/Session:** Redis (Recommended via Docker)
+* **Security:** Passlib (Argon2), PyJWT
+* **Messaging:** Email via `resend`
+
+---
+
+##  Quality Assurance & Testing (QA)
+
+### 1. Requirements Traceability Matrix (RTM)
+
+| ID        | Feature            | Main Test Scenario                                                            | Priority | Status |
+|-----------|--------------------|-------------------------------------------------------------------------------|----------|--------|
+| **US-01** | Registration/Login | Validate email flow and password hash creation.                               | High     | 🟢 OK  |
+| **US-02** | Refresh Token      | Validate token renewal without forcing a new login.                           | High     | 🟢 OK  |
+| **US-03** | Summary (AI)       | Test transcription and JSON integrity returned by the AI.                     | High     | 🟢 OK  |
+| **US-04** | Questions (AI)     | Validate the number of questions and the structure of the alternatives (A-E). | Medium   | 🟢 OK  |
+| **US-05** | Notes CRUD         | Validate CRUD with scope strictly limited to the logged-in user.              | High     | 🟢 OK  |
+
+### 2. Test Plan (Security Checklist)
+
+* **IDOR (Insecure Direct Object Reference) Audit:**
+* *Criteria:* Authenticate User A and attempt to alter/delete data belonging to User B. The system must return HTTP 404 or 403.
+
+
+* **Sanitization Audit against Prompt Injection:**
+* *Criteria:* Insert malicious payloads into the base text. The AI must ignore the commands and return `None`.
+
+
+* **Persistence Audit (Resilience):**
+* *Criteria:* Simulate a network outage during AI processing. The database must trigger a `rollback` to avoid orphaned or corrupted data.
+
+
 
 ---
 
 ## 🔧 Installation & Setup
 
-1. **Clone the repository:**
-    ```bash
-    git clone https://github.com/Glauber-max/site_de_estudos_back.git
-    cd site_de_estudos_back
+**1. Clone the repository:**
 
-2. **Activate the MV:**
-    ```bash
-   python -m venv venv
-    #  (Linux/macOS): source venv/bin/activate
-    #  (Windows): .\venv\Scripts\Activate.ps1
-   if no access, write Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope Process, and after use a activation
+```bash
+git clone https://github.com/Glauber-max/site_de_estudos_back.git
+cd site_de_estudos_back
 
-3. **install requirements:**
-    ```bash
-    pip install -r requirements.txt
+```
 
-4. **activate the aplication**
-    ```bash
-   uvicorn main:app --reload
+**2. Set up the Virtual Environment:**
 
-for see all routes, go in http://127.0.0.1:8000/docs after you run the uvicorn, but in resume is:
-user
+```bash
+python -m venv venv
+# Windows: .\venv\Scripts\Activate.ps1
+# Linux/macOS: source venv/bin/activate
 
+```
 
-POST
-/user/create_user
-Register Routes
+**3. Start Redis via Docker:**
 
-POST
-/user/validation_account
-Router For Validation Token
+```bash
+docker run -d -p 6379:6379 redis
 
-POST
-/user/login
-Login
+```
 
-POST
-/user/change_passoword
-Change Password
+**4. Install dependencies:**
 
-PATCH
-/user/token/change_password
-Verify Token For Change Password
+```bash
+pip install -r requirements.txt
 
-POST
-/user/required/acesses_token
-Requirements Token
+```
 
-DELETE
-/user/delete/tables
-Hard Delete
+**5. Start the server:**
 
-POST
-/user/logout
-Logout
+```bash
+uvicorn main:app --reload
 
-GET
-/user/obter/usuario
-Get User
+```
 
-summary
+*Access the interactive documentation (Swagger UI) at: `http://127.0.0.1:8000/docs*`
 
-POST
-/summary/summary_videos/download
-Summary Videos
+---
 
+##  API Endpoints
 
-GET
-/summary/summary_videos/filter
-See Summary
+### User
 
-GET
-/summary/summary_videos/see_all
-See All Summary
+* **POST** `/user/create_user` - Register Routes
+* **POST** `/user/validation_account` - Router For Validation Token
+* **POST** `/user/login` - Login
+* **POST** `/user/change_passoword` - Change Password
+* **PATCH** `/user/token/change_password` - Verify Token For Change Password
+* **POST** `/user/required/acesses_token` - Requirements Token
+* **DELETE** `/user/delete/tables` - Hard Delete
+* **POST** `/user/logout` - Logout
+* **GET** `/user/obter/usuario` - Get User
 
-DELETE
-/summary/summary_videos/delete/{id_summary}
-Delete Summary
+### Summary
 
-notes
+* **POST** `/summary/summary_videos/download` - Summary Videos
+* **GET** `/summary/summary_videos/filter` - See Summary
+* **GET** `/summary/summary_videos/see_all` - See All Summary
+* **DELETE** `/summary/summary_videos/delete/{id_summary}` - Delete Summary
 
-POST
-/notes/write
-Write Note
+### Notes
 
-GET
-/notes/get_note_all
-Get Notes
+* **POST** `/notes/write` - Write Note
+* **GET** `/notes/get_note_all` - Get Notes
+* **GET** `/notes/get_note/filter` - Get Filter Notes
+* **DELETE** `/notes/delete_note/{note_id}` - Delete Note
+* **PATCH** `/notes/update_note/{note_id}` - Update Notes
 
-GET
-/notes/get_note/filter
-Get Filter Notes
+### Questions
 
-DELETE
-/notes/delete_note/{note_id}
-Delete Note
+* **POST** `/question/create/question` - Create Question
+* **POST** `/question/create/question/ia` - Create Question Ia
+* **PATCH** `/question/update/question/{question_id}` - Update Question
+* **DELETE** `/question/delete/question/{question_id}` - Delete Question
+* **GET** `/question/questions/get_all` - Get All Questions
+* **GET** `/question/questions/filter` - Filter Questions
 
-PATCH
-/notes/update_note/{note_id}
-Update Notes
+---
 
-default
-GET
-/
-Home
-* Refresh Token Leak Fix: Adjust the login controller logic to prevent generating/stacking infinite Refresh Tokens for the same active user inside the database.
+##  Known Issues & Roadmap (Next Steps)
 
-* Fallback Optimization: Migrate the standard local Whisper processing over to fast-whisper (bringing fallback execution times down from 10 minutes to under 2 minutes).
+* 🟡 **[BUG-002] Device Concurrency:** Update the login flow to avoid blindly overwriting the `refresh_token` in the database, allowing multiple concurrent sessions (e.g., Mobile and Desktop).
+* 🔵 **[ENHANCEMENT-001] Soft Delete:** Replace the current *Hard Delete* system in the tables with a boolean flag (`is_active: False`), protecting the database against accidental data loss and allowing account restoration.
+* 🔵 **[ENHANCEMENT-002] Unit Tests:** Add `pytest` test coverage for the `FactoryQuestionIA` and `FactorySummary` modules.
+* 🔵 **[ENHANCEMENT-003] create a front-end
 
-* Enhanced Documentation: Expand Docstrings across all Controllers, Factories, and Schemas.
+---
 
-developed by Glauber-max
+*Developed by Glauber-max*

@@ -32,7 +32,7 @@ def write_note(note: WriteNote, db: Session = Depends(get_db), credentials: HTTP
 @router.get("/get_note_all", status_code=200)
 def get_notes(db: Session = Depends(get_db), credentials: HTTPAuthorizationCredentials = Depends(security)):
     user = user_controller.verify_acesses_jwt(credentials)
-    notes = db.query(Notes).filter(Notes.user_id == int(user["sub"])).limit(100).all()
+    notes = db.query(Notes).filter(Notes.user_id == int(user["sub"])).limit(200).all()
     if notes is None:
         raise HTTPException(status_code=404, detail="user not exist")
     return {"notes": notes}
