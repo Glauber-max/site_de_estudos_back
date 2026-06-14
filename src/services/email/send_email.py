@@ -5,6 +5,8 @@ from abc import ABC, abstractmethod
 from fastapi import HTTPException
 from pydantic import EmailStr
 from src.services.email.html_gerator_ import create_html, create_html_changed_password
+import logging
+logger = logging.getLogger(__name__)
 load_dotenv()
 resend.api_key = os.getenv("RESEND.API_KEY")
 
@@ -25,7 +27,7 @@ class GmailSendServiceCreateAccount(SendService):
             })
             return {"menssage": "code sent successfully"}
         except Exception as e:
-            print(f"error in sending email, {e}")
+            logger.error(f"error in sending email, {e}")
             raise HTTPException(status_code=500, detail="error in sending email")
 
 class GmailSendChangedPasswordService(SendService):
@@ -40,7 +42,7 @@ class GmailSendChangedPasswordService(SendService):
             })
             return {"menssage": "code sent successfully"}
         except Exception as e:
-            print(f"error in sending email, {e}")
+            logger.error(f"error in sending email, {e}")
             raise HTTPException(status_code=500, detail="error in sending email")
 def send_service():
     return GmailSendServiceCreateAccount()

@@ -5,11 +5,12 @@ from src.database.conecction import get_db
 from src.controllers.summary_controller import CreateSummaryFromYoutube
 from src.schemas.summary_filter import SchemaCreateSummaryFromYoutube, SummaryCreate
 from src.services.summary_IA.ia_factory import FactorySummary
-from src.controllers.user_controller import verify_acesses_jwt
+from src.controllers.user_controller import          verify_acesses_jwt
 from src.models.summary import Summary
 from fastapi.security import  HTTPBearer, HTTPAuthorizationCredentials
 import json
-
+import logging
+logger = logging.getLogger(__name__)
 security = HTTPBearer()
 router = APIRouter()
 
@@ -27,12 +28,12 @@ def summary_videos(
         ia = FactorySummary.factory_method("3.5")
         summary = ia.summarize(path)
     except Exception as e:
-        print(f"Error first model: {e}")
+        logger.warning(f"Error first model: {e}")
         try:
             ia = FactorySummary.factory_method("2.5")
             summary = ia.summarize(path)
         except Exception as error:
-            print(f"Error last model: {error}")
+            logger.error(f"Error last model: {error}")
             raise HTTPException(status_code=503, detail="IA cant summarize this")
     try:
         dados_json = json.loads(summary)
@@ -42,7 +43,7 @@ def summary_videos(
             id_usuario=int(user["sub"])
         )
     except (json.JSONDecoder, KeyError) as error:
-        print(f"Error second model: {error}")
+        logger.error(f"Error saved summary: {error}")
         raise HTTPException(status_code=422, detail="the structure return summary failed ")
     try:
         os.remove(path=path)
@@ -52,24 +53,24 @@ def summary_videos(
         return dados_json
     except Exception as error:
         db.rollback()
-        print(f"Error in database store: {error}")
+        logger.error(f"Error in database store: {error}")
         raise HTTPException(status_code=500, detail="error saving in database")
 
 @router.get(f"/summary_videos/filter", status_code=200)
 def see_summary(subject: str = None, db: Session = Depends(get_db), credentials: HTTPAuthorizationCredentials = Depends(security)):
     user = verify_acesses_jwt(credentials)
-    summary = db.query(Summary).filter(Summary.id_usuario == user["sub"]).all()
-    if not summary or isinstance(summary, Summary):
-        raise HTTPException(status_code=404, detail="Summary not found")
     if subject:
-        summary_list = [l for l in summary if subject.lower() in l.subject.lower()]
+        summary_list = db.query(Summary).filter(
+            Summary.id_usuario == int(user["sub"]),
+            Summary.subject.like(f"%{subject}%")
+        ).all()
         return {"summary": summary_list}
     return {"summary": []}
 
 @router.get("/summary_videos/see_all", status_code=200)
 def see_all_summary(db: Session = Depends(get_db), credentials: HTTPAuthorizationCredentials = Depends(security)):
     user = verify_acesses_jwt(credentials)
-    summary = db.query(Summary).where(Summary.id_usuario == int(user["sub"])).all()
+    summary = db.query(Summary).where(Summary.id_usuario == int(user["sub"])).limit(100).all()
     if summary is None:
         raise HTTPException(status_code=404, detail="Summary not found")
     return {"summary": summary}
@@ -80,15 +81,15 @@ def delete_summary(
         db: Session = Depends(get_db),
         credentials: HTTPAuthorizationCredentials = Depends(security)
 ):
-    verify_acesses_jwt(credentials)
+    user = verify_acesses_jwt(credentials)
 
     try:
-        summary = db.query(Summary).filter(Summary.id == id_summary).delete()
+        summary = db.query(Summary).filter(Summary.id == id_summary, Summary.id_usuario == int(user["sub"])).delete()
         if not summary:
             raise HTTPException(status_code=404, detail="Summary not found")
         db.commit()
         return {"message": "summary deleted successfully"}
     except Exception as error:
         db.rollback()
-        print(f"Error in database delete: {error}")
+        logger.error(f"Error in database delete: {error}")
         raise HTTPException(status_code=500, detail="error deleting summary")

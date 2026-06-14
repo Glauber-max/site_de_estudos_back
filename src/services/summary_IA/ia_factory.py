@@ -14,4 +14,4 @@ class FactorySummary:
 
     }
     @classmethod
-    def factory_method(cls, tipo: str) -> GeminiSummaryFlash | GeminiSummaryGemma:  return cls._types_of_summary.get(tipo)
+    def factory_method(cls, tipo: str):  return cls._types_of_summary.get(tipo)

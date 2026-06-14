@@ -15,6 +15,8 @@ from datetime import datetime, timezone, timedelta
 import jwt
 from dotenv import load_dotenv
 import os
+import logging
+logger = logging.getLogger(__name__)
 pwd_context = CryptContext(schemes=["argon2"], deprecated="auto")
 load_dotenv()
 key = os.getenv("SECRET_KEY")
@@ -26,7 +28,7 @@ def user_create_redis(register: CreateUser) -> None:
         redis_create_user(register, token)
         create.send_emails(register.email, register.nome, token)
     except Exception as e:
-        print(f"error register in redis/send email: {e}")
+        logger.error(f"error register in redis/send email: {e}")
         raise HTTPException(status_code=500, detail="Failed to process registration")
 
 
@@ -48,7 +50,7 @@ def function_for_get_user(email: EmailStr, db: Session, token_send: str) -> None
     except HTTPException:
         raise
     except Exception as e:
-        print(f"error register in database: {e}")
+        logger.error(f"error register in database: {e}")
         raise HTTPException(status_code=500, detail="server error in database")
 
 
@@ -73,7 +75,7 @@ def send_change_password_function(user: ChangePassword, db: Session) -> None:
         username = str(user_verify.name)
         change.send_emails(email_end=user.email, nome=username, token=token)
     except Exception as e:
-        print(f"error sending change_password function: {e}")
+        logger.error(f"error sending change_password function: {e}")
         raise HTTPException(status_code=500, detail="internal server error create password reset")
 
 
@@ -91,7 +93,7 @@ def verify_change_password(user: ChangePasswordValidation, db: Session) -> dict[
     except HTTPException:
         raise
     except Exception as e:
-        print(f"error update to password: {e}")
+        logger.error(f"error update to password: {e}")
         raise HTTPException(status_code=500, detail="data base error update")
 
 
@@ -131,7 +133,7 @@ def save_refresh_token_user(user: User, db: Session) -> str:
         db.refresh(refresh)
         return token["token"]
     except Exception as e:
-        print(f"server error save refresh token: {e}")
+        logger.error(f"server error save refresh token: {e}")
         raise HTTPException(status_code=500, detail="error securing session tokens")
 
 def verify_acesses_jwt(token: HTTPAuthorizationCredentials) -> dict[str, str]:

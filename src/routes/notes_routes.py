@@ -6,6 +6,8 @@ from src.models.notes import Notes
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from src.controllers import user_controller
 from sqlalchemy import update
+import logging
+logger = logging.getLogger(__name__)
 router = APIRouter()
 security = HTTPBearer()
 
@@ -24,13 +26,13 @@ def write_note(note: WriteNote, db: Session = Depends(get_db), credentials: HTTP
         return {"message": "Note successfully created"}
     except Exception as error:
         db.rollback()
-        print(f"Error in database store: {error}")
+        logger.error(f"Error in database store: {error}")
         raise HTTPException(status_code=500, detail="server are error in store")
 
 @router.get("/get_note_all", status_code=200)
 def get_notes(db: Session = Depends(get_db), credentials: HTTPAuthorizationCredentials = Depends(security)):
     user = user_controller.verify_acesses_jwt(credentials)
-    notes = db.query(Notes).filter(Notes.user_id == int(user["sub"])).all()
+    notes = db.query(Notes).filter(Notes.user_id == int(user["sub"])).limit(100).all()
     if notes is None:
         raise HTTPException(status_code=404, detail="user not exist")
     return {"notes": notes}
@@ -38,18 +40,18 @@ def get_notes(db: Session = Depends(get_db), credentials: HTTPAuthorizationCrede
 @router.get("/get_note/filter", status_code=200)
 def get_filter_notes(title = None, db: Session = Depends(get_db), credentials: HTTPAuthorizationCredentials = Depends(security)):
     user = user_controller.verify_acesses_jwt(credentials)
-    notes = db.query(Notes).filter(Notes.user_id == int(user["sub"])).all()
-    if notes is None:
-        raise HTTPException(status_code=404, detail="user not exist")
     if title:
-        notes_list = [l for l in notes if title.lower() in l.title.lower()]
+        notes_list = db.query(Notes).filter(
+            Notes.user_id == int(user["sub"]),
+            Notes.title.like(f"%{title}%")
+        ).all()
         return {"notes": notes_list}
     return {"notes": []}
 
 @router.delete("/delete_note/{note_id}", status_code=204)
 def delete_note(note_id: int, db: Session = Depends(get_db), credentials: HTTPAuthorizationCredentials = Depends(security)):
-    user_controller.verify_acesses_jwt(credentials)
-    note = db.query(Notes).filter(Notes.id == note_id).first()
+    user = user_controller.verify_acesses_jwt(credentials)
+    note = db.query(Notes).filter(Notes.id == note_id, Notes.user_id == int(user["sub"])).first()
     if note is None:
         raise HTTPException(status_code=404, detail="note not exist")
     try:
@@ -57,7 +59,7 @@ def delete_note(note_id: int, db: Session = Depends(get_db), credentials: HTTPAu
         db.commit()
         return None
     except Exception as error:
-        print(f"Error in database delete: {error}")
+        logger.error(f"Error in database delete: {error}")
         raise HTTPException(status_code=500, detail="server are error in delete any")
 
 @router.patch("/update_note/{note_id}", status_code=200)
@@ -75,5 +77,5 @@ def update_notes(note_id: int,
         db.commit()
         return {"message": "Note successfully updated"}
     except Exception as error:
-        print(f"Error in database update: {error}")
+        logger.error(f"Error in database update: {error}")
         raise HTTPException(status_code=500, detail="server are error in update any")

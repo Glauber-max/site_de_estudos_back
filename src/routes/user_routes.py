@@ -10,7 +10,8 @@ from src.database.conecction import  get_db
 from sqlalchemy.orm import Session
 from src.models import User
 from src.schemas.user_filter import RefreshToken
-
+import logging
+logger = logging.getLogger(__name__)
 router = APIRouter()
 security = HTTPBearer()
 
@@ -111,7 +112,7 @@ def hard_delete(credentials: HTTPAuthorizationCredentials = Depends(security), d
         db.commit()
         return {"message": "user deleted"}
     except Exception as e:
-        print(f"account cant be deleted: {e}")
+        logger.error(f"account cant be deleted: {e}")
         raise HTTPException(status_code=500, detail="cant be deleted")
 
 @router.post("/logout", status_code=200)
@@ -127,7 +128,7 @@ def logout(credentials: HTTPAuthorizationCredentials = Depends(security), db: Se
 @router.get("/obter/usuario", status_code=200)
 def get_user(credentials: HTTPAuthorizationCredentials = Depends(security), db: Session = Depends(get_db)):
     user_jwt = user_controller.verify_acesses_jwt(credentials)
-    user = db.query(User).filter(User.id == user_jwt["sub"]).first()
+    user = db.query(User).filter(User.id == int(user_jwt["sub"])).first()
     if not user:
         raise HTTPException(status_code=404, detail="Account not found.")
     return {"user": user}

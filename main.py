@@ -5,6 +5,12 @@ from src.routes.summary_routes import router as summary_routes
 from src.routes.notes_routes import router as notes_routes
 from src.routes.question_routes import router as question_routes
 from dotenv import load_dotenv
+import logging
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+    datefmt="%d-%b-%y %H:%M:%S",
+)
 load_dotenv()
 import os
 os.getenv("SECRET_KEY")

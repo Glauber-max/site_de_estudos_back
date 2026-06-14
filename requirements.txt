@@ -13,3 +13,4 @@ faster-whisper
 google-genai
 pyjwt[crypto]
 protobuf
+booktype

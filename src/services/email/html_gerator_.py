@@ -1,4 +1,6 @@
 from jinja2 import Template
+import logging
+logger = logging.getLogger(__name__)
 '''
 i choice write the code this shape because a file template was open and close more times, so i open when the project start
 this will be close when the project close, also saving CPU processing power and assigning it to the RAM (which is faster than the hard drive)
@@ -10,7 +12,7 @@ try:
     with open("src/services/templates/changed_password.html", "r", encoding="utf-8") as file:
         template_changed_password = Template(file.read())
 except FileNotFoundError as e:
-    print(f"archive not found: {e}")
+    logger.error(f"archive not found: {e}")
 
     template_create_account = None
     template_changed_password = None
