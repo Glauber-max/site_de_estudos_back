@@ -1,6 +1,8 @@
 from fastapi.security import HTTPAuthorizationCredentials
 from pydantic import EmailStr
 from sqlalchemy import update
+
+from src.services.email.create_redis import saved_redis
 from src.models.token_user import TokenValidation
 from src.schemas.user_filter import ChangePasswordValidation
 from src.services.email.create_redis import redis_create_user, get_account_after_token_correct, compare_redis_for_change_password, delete_token_from_redis_after_token
@@ -73,6 +75,7 @@ def send_change_password_function(user: ChangePassword, db: Session) -> None:
         if user_verify is None:
             return #I search about security and return nothing is a better choice this case
         username = str(user_verify.name)
+        saved_redis(email=user.email, code=token)
         change.send_emails(email_end=user.email, nome=username, token=token)
     except Exception as e:
         logger.error(f"error sending change_password function: {e}")

@@ -1,11 +1,9 @@
----
 
 # Study Hub API (AI-Powered)
 
 **Product Vision:**
 Develop an "Intelligent Study Hub" that leverages generative AI to transform multimedia content into educational material, reducing students' preparation time and centralizing their personal organization tools within a secure, high-performance ecosystem.
 
----
 
 ## Core Features (MVP Backlog)
 
@@ -30,7 +28,6 @@ Develop an "Intelligent Study Hub" that leverages generative AI to transform mul
 
 
 
----
 
 ##  Crucial Business Rules & Architecture
 
@@ -38,7 +35,6 @@ Develop an "Intelligent Study Hub" that leverages generative AI to transform mul
 * **Cache Security:** Account validation and password reset tokens have a strict TTL (Time-To-Live) of 300 seconds (5 minutes) in Redis.
 * **Data Isolation (Tenant-like):** No data (note, question, summary) can be accessed, modified, or deleted unless it strictly belongs to the `sub` (ID) contained in the authenticated user's JWT.
 
----
 
 ##  Technologies & Infrastructure
 
@@ -167,11 +163,10 @@ uvicorn main:app --reload
 
 ##  Known Issues & Roadmap (Next Steps)
 
-* 🟡 **[BUG-002] Device Concurrency:** Update the login flow to avoid blindly overwriting the `refresh_token` in the database, allowing multiple concurrent sessions (e.g., Mobile and Desktop).
-* 🔵 **[ENHANCEMENT-001] Soft Delete:** Replace the current *Hard Delete* system in the tables with a boolean flag (`is_active: False`), protecting the database against accidental data loss and allowing account restoration.
-* 🔵 **[ENHANCEMENT-002] Unit Tests:** Add `pytest` test coverage for the `FactoryQuestionIA` and `FactorySummary` modules.
-* 🔵 **[ENHANCEMENT-003] create a front-end
+*  BUG-002 Device Concurrency:** Update the login flow to avoid blindly overwriting the `refresh_token` in the database, allowing multiple concurrent sessions (e.g., Mobile and Desktop).
+*  Settings-001 Soft Delete:** Replace the current *Hard Delete* system in the tables with a boolean flag (`is_active: False`), protecting the database against accidental data loss and allowing account restoration.
+*  Settings-002 Unit Tests:** Add `pytest` test coverage for the `FactoryQuestionIA` and `FactorySummary` modules.
+*  Settings-003 create a front-end
 
----
 
 *Developed by Glauber-max*

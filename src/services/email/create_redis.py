@@ -7,9 +7,10 @@ import logging
 logger = logging.getLogger(__name__)
 red = redis.Redis(host='localhost', port=6379, decode_responses=True)
 
-def saved_redis(key: str, code: str) -> None:
+def saved_redis(email: str, code: str) -> None:
     try:
-        red.setex(key, 300, code)
+        redis_key = f"password_reset:{email}"
+        red.setex(redis_key, 300, code)
     except Exception as e:
         logger.error(f"error saving redis: {e}")
         raise HTTPException(status_code=500, detail="internal server error in cache")
