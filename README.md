@@ -60,10 +60,6 @@ EMAIL_FROM=onboarding@resend.dev  # Change to your custom domain email in produc
 docker compose up -d 
 ```
 6. Start the server:
-
-before using uvicorn in the terminal, make sure the database has been created correctly, 
-go to the main.py file and run that file containing the 'create_table' function to create a new database
-
 ```bash
 uvicorn main:app --reload
 ```

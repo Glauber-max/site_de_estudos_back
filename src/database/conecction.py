@@ -7,15 +7,13 @@ urlDatBase = "sqlite:///src/database/base/databaseEstudos.sqlite"
 
 db = create_engine(urlDatBase, connect_args={"check_same_thread": False})
 
-
 SessionLocal = sessionmaker(autoflush=False, autocommit=False, bind=db)
-session = SessionLocal()
 
 Base = declarative_base()
 
 def get_db():
-    engine = SessionLocal()
+    db_session = SessionLocal()
     try:
-        yield engine
+        yield db_session
     finally:
-        engine.close()
+        db_session.close()
