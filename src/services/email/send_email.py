@@ -20,7 +20,7 @@ class GmailSendServiceCreateAccount(SendService):
         html = create_html(name=nome, code=token,  email=email_end)
         try:
             resend.Emails.send({
-                "from": "onboarding@resend.dev",
+                "from": os.environ.get("EMAIL_FROM", "onboarding@resend.dev"),
                 "to": email_end,
                 "subject": "send code for activing account",
                 "html": html

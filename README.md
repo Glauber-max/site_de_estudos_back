@@ -22,7 +22,7 @@ Two different AI models in case one fails, and a log of errors or request inform
 * AI/Multimodal: Google GenAI SDK to create all the summaries and questions
 * Cache/Session: Redis (Docker) used to temporarily store user data until the account is validated, then it gets added to the database
 * Security: Passlib (Argon2), PyJWT
-* Messaging: resend
+* Messaging: Resend
 
 ## Installation & Setup
 
@@ -61,7 +61,8 @@ docker compose up -d
 ```
 6. Start the server:
 
-run file main.py for create database
+before using uvicorn in the terminal, make sure the database has been created correctly, 
+go to the main.py file and run that file containing the 'create_table' function to create a new database
 
 ```bash
 uvicorn main:app --reload
@@ -73,6 +74,6 @@ Device Concurrency: Update the login flow to avoid blindly overwriting the refre
 
 Soft Delete: Replace the current hard delete system with a boolean flag to protect against accidental data loss.
 
-Unit Tests: Add pytest test coverage for the AI and Summary modules.
+Unit Tests: Add Pytest test coverage for the AI and Summary modules.
 
 Front-end Integration: Begin development of the web client to consume the API.
